@@ -4,5 +4,7 @@ echo "Hello, I am a worker with $(hostname)"
 
 # Shared logic to install hq
 {{template "init" .}}
-hq worker start
+
+hq worker start --server-dir ./hq
+
 {{template "exit" .}}

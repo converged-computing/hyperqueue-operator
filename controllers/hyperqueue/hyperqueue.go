@@ -34,7 +34,7 @@ func (r *HyperqueueReconciler) ensureHyperqueue(
 	cluster *api.Hyperqueue,
 ) (ctrl.Result, error) {
 
-	// Add entrypoint config maps
+	// Add entrypoint config maps and access.json
 	_, result, err := r.ensureConfigMap(ctx, cluster, "entrypoint", cluster.Name+entrypointSuffix)
 	if err != nil {
 		return result, err
@@ -157,32 +157,20 @@ func (r *HyperqueueReconciler) getConfigMap(
 		if err != nil {
 			return cm, ctrl.Result{}, err
 		}
+
+		// access.json generator. This design isn't ideal, but I don't see a way around it
+		// https://github.com/It4innovations/hyperqueue/issues/592
+		access, err := r.getAccess(ctx, cluster)
+		if err != nil || access == "" {
+			return cm, ctrl.Result{Requeue: true}, err
+		}
+		data[accessKey] = access
 		data["start-server"] = serverStart
 		data["start-worker"] = workerStart
 	}
-	fmt.Println(data)
 
 	// Create the config map with respective data!
-	cm = &corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      configFullName,
-			Namespace: cluster.Namespace,
-		},
-		Data: data,
-	}
-
-	// Show in the logs
-	fmt.Println(cm.Data)
-	ctrl.SetControllerReference(cluster, cm, r.Scheme)
-
-	// Finally create the config map
-	r.Log.Info(
-		"✨ Creating Hyperqueue ConfigMap ✨",
-		"Type", configName,
-		"Namespace", cm.Namespace,
-		"Name", cm.Name,
-	)
+	cm = r.createConfigMap(cluster, configFullName, data)
 
 	// Actually create it
 	err := r.Create(ctx, cm)
@@ -198,6 +186,35 @@ func (r *HyperqueueReconciler) getConfigMap(
 
 	// Successful - return and requeue
 	return cm, ctrl.Result{Requeue: true}, nil
+}
+
+// createConfigMap generates a config map with some kind of data
+func (r *HyperqueueReconciler) createConfigMap(
+	cluster *api.Hyperqueue,
+	configName string,
+	data map[string]string,
+) *corev1.ConfigMap {
+
+	// Create the config map with respective data!
+	cm := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      configName,
+			Namespace: cluster.Namespace,
+		},
+		Data: data,
+	}
+	// Finally create the config map
+	r.Log.Info(
+		"✨ Creating Hyperqueue ConfigMap ✨",
+		"Type", configName,
+		"Namespace", cm.Namespace,
+		"Name", cm.Name,
+	)
+	// Show in the logs
+	fmt.Println(cm.Data)
+	ctrl.SetControllerReference(cluster, cm, r.Scheme)
+	return cm
 }
 
 // ensureConfigMap ensures we've generated the read only entrypoints
