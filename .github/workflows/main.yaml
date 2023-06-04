@@ -44,7 +44,7 @@ jobs:
       run: |
         cp examples/dist/hyperqueue-operator.yaml /tmp/hyperqueue-operator.yaml
         make build-config
-        diff examples/dist/hyperqueue-operator.yaml /hyperqueue/hyperqueue-operator.yaml
+        diff examples/dist/hyperqueue-operator.yaml /tmp/hyperqueue-operator.yaml
 
   test-jobs:
     runs-on: ubuntu-latest
