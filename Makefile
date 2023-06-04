@@ -130,6 +130,15 @@ docker-build: test ## Build docker image with the manager.
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}
 
+# Build a local test image, load into minikube or kind and apply the build-config
+.PHONY: deploy-local
+deploy-local: manifests kustomize build
+	kubectl delete -f examples/dist/hyperqueue-operator-local.yaml || true
+	docker build -t ${DEVIMG} .
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${DEVIMG}
+	$(KUSTOMIZE) build config/default > examples/dist/hyperqueue-operator-local.yaml
+	sed -i 's/        imagePullPolicy: Always/        imagePullPolicy: Never/' examples/dist/hyperqueue-operator-local.yaml
+
 # PLATFORMS defines the target platforms for  the manager image be build to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
 # - able to use docker buildx . More info: https://docs.docker.com/build/buildx/

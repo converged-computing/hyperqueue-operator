@@ -1,0 +1,101 @@
+name: test hyperqueue-operator
+
+on:
+  pull_request: []
+
+jobs:
+  formatting:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup black linter
+      run: conda create --quiet --name black pyflakes
+
+    - name: Check Spelling
+      uses: crate-ci/typos@7ad296c72fa8265059cc03d1eda562fbdfcd6df2 # v1.9.0
+      with:
+        files: ./README.md ./config/samples
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ^1.18
+    - name: fmt check
+      run: make fmt
+
+    # These aren't written yet
+    - name: Run Unit tests
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: make test
+
+    # Ensure build-config is the same as the one we have
+    - name: Check Updated hyperqueue-operator.yaml
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cp examples/dist/hyperqueue-operator.yaml /tmp/hyperqueue-operator.yaml
+        make build-config
+        diff examples/dist/hyperqueue-operator.yaml /hyperqueue/flux-operator.yaml
+
+  test-jobs:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [["hello-world", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["post", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["batch", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["singularity", "ghcr.io/rse-ops/singularity:tag-mamba", 60],
+               ["nginx-sidecar-service", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["nginx-service", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["lammps", "ghcr.io/rse-ops/lammps:flux-sched-focal-v0.24.0", 60],
+               ["pokemon", "ghcr.io/rse-ops/pokemon:app-latest", 60],
+               ["timed", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["debug", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["flux-resource-list", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["existing-volumes", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["volumes", "ghcr.io/flux-framework/flux-restful-api:latest", 60],
+               ["snakemake", "ghcr.io/rse-ops/atacseq:app-latest", 60]]
+
+    steps:
+    - name: Clone the code
+      uses: actions/checkout@v3
+
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: ^1.18
+
+    - name: Start minikube
+      uses: medyagh/setup-minikube@697f2b7aaed5f70bf2a94ee21a4ec3dde7b12f92 # v0.0.9
+
+    - name: Create the namespace
+      run: kubectl create namespace hyperqueue-operator
+
+    - name: Pull Docker Containers to MiniKube
+      env:
+        container: ${{ matrix.test[1] }}
+        test: ${{ matrix[0] }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        export SHELL=/bin/bash
+        eval $(minikube -p minikube docker-env)
+        minikube ssh docker pull ${container}
+        make deploy-local
+        minikube image load ghcr.io/converged-computing/hyperqueue-operator:test
+        kubectl apply -f examples/dist/hyperqueue-operator-local.yaml
+
+    - name: Test ${{ matrix.test[0] }}
+      env:
+        name: ${{ matrix.test[0] }}
+        jobtime: ${{ matrix.test[2] }}
+      run: /bin/bash ./script/test.sh ${name} ${jobtime}
