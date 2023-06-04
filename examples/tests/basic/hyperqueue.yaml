@@ -1,0 +1,19 @@
+apiVersion: flux-framework.org/v1alpha1
+kind: Hyperqueue
+metadata:
+  labels:
+    app.kubernetes.io/name: hyperqueue
+    app.kubernetes.io/instance: hyperqueue-sample
+    app.kubernetes.io/part-of: hyperqueue-operator
+    app.kubernetes.io/created-by: hyperqueue-operator
+  name: hyperqueue-sample
+  namespace: hyperqueue-operator
+spec:
+
+  # One server, one worker
+  size: 2
+
+  # use an ubuntu base for the worker and server
+  server:
+    image: ubuntu
+    command: echo hello world
