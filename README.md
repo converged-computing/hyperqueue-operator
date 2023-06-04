@@ -35,7 +35,7 @@ You'll need to install the jobset API, which eventually will be added to Kuberne
 VERSION=v0.1.3
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/$VERSION/manifests.yaml
 ```
-or devlopment version:
+or development version:
 
 ```bash
 $ kubectl apply --server-side -k github.com/kubernetes-sigs/jobset/config/default?ref=main
