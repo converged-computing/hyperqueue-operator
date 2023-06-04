@@ -35,6 +35,11 @@ You'll need to install the jobset API, which eventually will be added to Kuberne
 VERSION=v0.1.3
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/$VERSION/manifests.yaml
 ```
+or development version:
+
+```bash
+$ kubectl apply --server-side -k github.com/kubernetes-sigs/jobset/config/default?ref=main
+```
 
 Generate the custom resource definition
 
@@ -46,6 +51,12 @@ $ make test-deploy DEVIMG=<some-registry>/hyperqueue-operator:tag
 $ make test-deploy DEVIMG=vanessa/hyperqueue-operator:test
 ```
 
+Make our namespace:
+
+```bash
+$ kubectl create namespace hyperqueue-operator
+```
+
 Apply the new config!
 
 ```bash
@@ -55,11 +66,35 @@ $ kubectl apply -f examples/dist/hyperqueue-operator-dev.yaml
 See logs for the operator
 
 ```bash
-$ kubectl logs -n hyperqueue-operator-system  hyperqueue-operator-controller-manager-6f6945579-9pknp 
+$ kubectl logs -n hyperqueue-operator-system hyperqueue-operator-controller-manager-6f6945579-9pknp 
 ```
 
+Create a "hello-world" interactive cluster:
 
-When you are done, cleanup.
+```bash
+$ kubectl apply -f examples/tests/hello-world/hyperqueue.yaml 
+```
+
+Look at the logs to see the worker/server starting (and hello world)
+
+```console
+2023-06-04T06:03:50Z INFO No online server found, starting a new server
+2023-06-04T06:03:50Z INFO Saving access file as '/root/.hq-server/001/access.json'
+File exists (os error 17)
++------------------+------------------------------------------------+
+| Server directory | /root/.hq-server                               |
+| Server UID       | L4E27M                                         |
+| Host             | hyperqueue-sample-hyperqueue-sample-server-0-0 |
+| Pid              | 2710                                           |
+| HQ port          | 39795                                          |
+| Workers port     | 38937                                          |
+| Start date       | 2023-06-04 06:03:50 UTC                        |
+| Version          | 0.15.0                                         |
++------------------+------------------------------------------------+
+```
+
+Note that we are currently trying to address [this issue](https://github.com/It4innovations/hyperqueue/issues/592) before the worker and server
+can properly communicate. The operator cannot assume a shared filesystem. When you are done, cleanup.
 
 ```bash
 $ kind delete cluster
@@ -72,6 +107,10 @@ This project aims to follow the Kubernetes [Operator pattern](https://kubernetes
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/),
 which provide a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster.
 
+
+### TODO
+
+- Add script logging levels / quiet
 
 ## License
 

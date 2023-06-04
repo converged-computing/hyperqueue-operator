@@ -47,6 +47,7 @@ func (r *HyperqueueReconciler) getContainers(
 	// Prepare resources
 	resources, err := r.getContainerResources(&node)
 	if err != nil {
+		r.Log.Error(err, "ERROR getting container resources")
 		return containers, err
 	}
 

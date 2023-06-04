@@ -91,7 +91,8 @@ func (r *HyperqueueReconciler) getCluster(
 			job, err := r.newJobSet(cluster)
 			if err != nil {
 				r.Log.Error(
-					err, "Failed to create new Hyperqueue JobSet",
+					err,
+					"Failed to create new Hyperqueue JobSet",
 					"Namespace:", job.Namespace,
 					"Name:", job.Name,
 				)
@@ -115,8 +116,7 @@ func (r *HyperqueueReconciler) getCluster(
 				)
 				return existing, ctrl.Result{}, err
 			}
-			// Successful - return and requeue
-			return job, ctrl.Result{Requeue: true}, nil
+			return job, ctrl.Result{}, err
 
 		} else if err != nil {
 			r.Log.Error(err, "Failed to get Hyperqueue JobSet")
@@ -149,11 +149,11 @@ func (r *HyperqueueReconciler) getConfigMap(
 	if configName == "entrypoint" {
 
 		// Generate data for both the start-server.sh and start-worker.sh
-		serverStart, err := generateScript(cluster, cluster.Spec.Server, "server")
+		serverStart, err := generateScript(cluster, cluster.Spec.Server, startServerTemplate)
 		if err != nil {
 			return cm, ctrl.Result{}, err
 		}
-		workerStart, err := generateScript(cluster, cluster.Spec.Worker, "worker")
+		workerStart, err := generateScript(cluster, cluster.WorkerNode(), startWorkerTemplate)
 		if err != nil {
 			return cm, ctrl.Result{}, err
 		}

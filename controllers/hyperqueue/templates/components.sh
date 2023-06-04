@@ -3,7 +3,12 @@
 # Shared components for the broker and worker template
 {{define "init"}}
 
-func download() {
+# Initialization commands
+{{ .Node.Commands.Init}} > /dev/null
+
+which wget > /dev/null 2>&1 || (echo "Please install wget"; exit);
+
+function download() {
     wget https://github.com/It4innovations/hyperqueue/releases/download/v{{ .Spec.HyperqueueVersion }}/hq-v{{ .Spec.HyperqueueVersion }}-linux-x64.tar.gz
     tar -xvzf hq-v{{ .Spec.HyperqueueVersion }}-linux-x64.tar.gz
     mv hq /usr/bin/hq

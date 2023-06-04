@@ -63,6 +63,14 @@ spec:
                   command:
                     description: Command will be honored by a server node
                     type: string
+                  commands:
+                    description: Commands to run around different parts of the hyperqueu
+                      setup
+                    properties:
+                      init:
+                        description: Init runs before anything in both scripts
+                        type: string
+                    type: object
                   environment:
                     additionalProperties:
                       type: string
@@ -119,6 +127,14 @@ spec:
                   command:
                     description: Command will be honored by a server node
                     type: string
+                  commands:
+                    description: Commands to run around different parts of the hyperqueu
+                      setup
+                    properties:
+                      init:
+                        description: Init runs before anything in both scripts
+                        type: string
+                    type: object
                   environment:
                     additionalProperties:
                       type: string

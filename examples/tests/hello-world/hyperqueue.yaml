@@ -19,4 +19,6 @@ spec:
   # use an ubuntu base for the worker and server
   server:
     image: ubuntu
-    command: echo hello-world
+    command: echo hello world
+    commands: 
+      init: apt-get update && apt-get install -y wget
