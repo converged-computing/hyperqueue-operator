@@ -11,8 +11,6 @@ SPDX-License-Identifier: Apache-2.0
 package controllers
 
 import (
-	"reflect"
-
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,12 +43,13 @@ func (r *HyperqueueReconciler) newJobSet(
 			//	Operator:             jobset.OperatorAny,
 			//	TargetReplicatedJobs: []string{serverName},
 			//},
+			FailurePolicy: &jobset.FailurePolicy{
+				MaxRestarts: 0,
+			},
 
 			// This might be the control for child jobs (worker)
 			// But I don't think we need this anymore.
 			Suspend: &suspend,
-			// TODO decide on FailurePolicy here
-			// default is to fail if all jobs in jobset fail
 		},
 	}
 
@@ -65,13 +64,7 @@ func (r *HyperqueueReconciler) newJobSet(
 	workerNodes := cluster.WorkerNodes()
 	if workerNodes > 0 {
 
-		// If we don't have a worker spec, copy the parent
-		workerNode := cluster.Spec.Worker
-		if reflect.DeepEqual(workerNode, api.Node{}) {
-			workerNode = cluster.Spec.Server
-		}
-
-		workerJob, err := r.getJob(cluster, workerNode, workerNodes, "worker", true)
+		workerJob, err := r.getJob(cluster, cluster.WorkerNode(), workerNodes, "worker", true)
 		if err != nil {
 			r.Log.Error(err, "There was an error getting the worker ReplicatedJob")
 			return &jobs, err

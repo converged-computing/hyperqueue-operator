@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "Hello, I am a server with $(hostname)"
+
 # This script handles shared start logic
 {{template "init" .}}
 
@@ -10,7 +12,7 @@ if [ "$@" == "" ]; then
     hq server start
 else
     hq server start &
-    hq server submit $@
+    hq submit $@
 fi
 
 {{template "exit" .}}

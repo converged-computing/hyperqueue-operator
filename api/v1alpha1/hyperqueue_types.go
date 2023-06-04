@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"reflect"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -80,6 +82,10 @@ type Node struct {
 	// +optional
 	Command string `json:"command,omitempty"`
 
+	// Commands to run around different parts of the hyperqueu setup
+	// +optional
+	Commands Commands `json:"commands,omitempty"`
+
 	// Working directory
 	// +optional
 	WorkingDir string `json:"workingDir,omitempty"`
@@ -97,6 +103,14 @@ type Node struct {
 	// Key/value pairs for the environment
 	// +optional
 	Environment map[string]string `json:"environment"`
+}
+
+// ContainerResources include limits and requests
+type Commands struct {
+
+	// Init runs before anything in both scripts
+	// +optional
+	Init string `json:"init,omitempty"`
 }
 
 // ContainerResources include limits and requests
@@ -120,6 +134,17 @@ func (hq *Hyperqueue) Validate() bool {
 // At this point we've already validated size is >= 1
 func (hq *Hyperqueue) WorkerNodes() int32 {
 	return hq.Spec.Size - 1
+}
+
+// WorkerNode returns the worker node (if defined) or falls back to the server
+func (hq *Hyperqueue) WorkerNode() Node {
+
+	// If we don't have a worker spec, copy the parent
+	workerNode := hq.Spec.Worker
+	if reflect.DeepEqual(workerNode, Node{}) {
+		workerNode = hq.Spec.Server
+	}
+	return workerNode
 }
 
 // HyperqueueStatus defines the observed state of Hyperqueue
