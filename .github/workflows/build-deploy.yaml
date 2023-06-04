@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        command: [docker, bundle, catalog]
+        command: [docker, catalog]
 
     name: make and build ${{ matrix.command }}
     steps:
