@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        command: [docker, catalog]
+        # catalog and bundle were removed, nobody using
+        command: [docker]
 
     name: make and build ${{ matrix.command }}
     steps:

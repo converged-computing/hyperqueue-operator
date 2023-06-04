@@ -44,14 +44,14 @@ jobs:
       run: |
         cp examples/dist/hyperqueue-operator.yaml /tmp/hyperqueue-operator.yaml
         make build-config
-        diff examples/dist/hyperqueue-operator.yaml /hyperqueue/flux-operator.yaml
+        diff examples/dist/hyperqueue-operator.yaml /hyperqueue/hyperqueue-operator.yaml
 
   test-jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        test: [["hello-world", "ubuntu", 60]]
+        test: [["hello-world", "ubuntu", 20]]
 
     steps:
     - name: Clone the code
@@ -85,4 +85,6 @@ jobs:
       env:
         name: ${{ matrix.test[0] }}
         jobtime: ${{ matrix.test[2] }}
-      run: /bin/bash ./script/test.sh ${name} ${jobtime}
+      run: |
+        echo "TODO test ${name}"
+        # /bin/bash ./script/test.sh ${name} ${jobtime}

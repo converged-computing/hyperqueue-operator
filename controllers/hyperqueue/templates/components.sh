@@ -21,3 +21,7 @@ mkdir -p ${workdir}
 
 # End init logic
 {{end}}
+
+{{define "exit"}}
+{{ if .Spec.Interactive }}sleep infinity{{ end }}
+{{ end }}

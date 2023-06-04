@@ -28,6 +28,9 @@ func (r *HyperqueueReconciler) newJobSet(
 	cluster *api.Hyperqueue,
 ) (*jobset.JobSet, error) {
 
+	// When we have a success policy
+	// serverName := cluster.Name + "-server"
+
 	// When suspend is true we have a hard time debugging jobs, so keep false
 	suspend := false
 	jobs := jobset.JobSet{
@@ -36,6 +39,12 @@ func (r *HyperqueueReconciler) newJobSet(
 			Namespace: cluster.Namespace,
 		},
 		Spec: jobset.JobSetSpec{
+
+			// The job is successful when the broker job finishes with completed (0)
+			//SuccessPolicy: &jobset.SuccessPolicy{
+			//	Operator:             jobset.OperatorAny,
+			//	TargetReplicatedJobs: []string{serverName},
+			//},
 
 			// This might be the control for child jobs (worker)
 			// But I don't think we need this anymore.
@@ -48,6 +57,7 @@ func (r *HyperqueueReconciler) newJobSet(
 	// Get leader server job, the parent in the JobSet
 	serverJob, err := r.getJob(cluster, cluster.Spec.Server, 1, "server", true)
 	if err != nil {
+		r.Log.Error(err, "There was an error getting the server ReplicatedJob")
 		return &jobs, err
 	}
 
@@ -63,6 +73,7 @@ func (r *HyperqueueReconciler) newJobSet(
 
 		workerJob, err := r.getJob(cluster, workerNode, workerNodes, "worker", true)
 		if err != nil {
+			r.Log.Error(err, "There was an error getting the worker ReplicatedJob")
 			return &jobs, err
 		}
 		jobs.Spec.ReplicatedJobs = []jobset.ReplicatedJob{serverJob, workerJob}
@@ -113,14 +124,6 @@ func (r *HyperqueueReconciler) getJob(
 		Replicas: 1,
 	}
 
-	// Do we have a pull secret for the image?
-	pullSecret := corev1.LocalObjectReference{}
-	if node.PullSecret != "" {
-		pullSecret = corev1.LocalObjectReference{
-			Name: node.PullSecret,
-		}
-	}
-
 	// Create the JobSpec for the job -> Template -> Spec
 	jobspec := batchv1.JobSpec{
 		BackoffLimit:          &backoffLimit,
@@ -138,18 +141,25 @@ func (r *HyperqueueReconciler) getJob(
 			},
 			Spec: corev1.PodSpec{
 				// matches the service
-				Subdomain:        serviceName,
-				Volumes:          getVolumes(cluster),
-				RestartPolicy:    corev1.RestartPolicyOnFailure,
-				ImagePullSecrets: []corev1.LocalObjectReference{pullSecret},
+				Subdomain:     serviceName,
+				Volumes:       getVolumes(cluster),
+				RestartPolicy: corev1.RestartPolicyOnFailure,
 			},
 		},
 	}
+
+	// Do we have a pull secret for the image?
+	if node.PullSecret != "" {
+		jobspec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{
+			{Name: node.PullSecret},
+		}
+	}
+
 	// Get resources for the node (server or worker)
 	resources, err := r.getNodeResources(cluster, node)
-	r.Log.Info("🌀 Hyperqueue", "Pod.Resources", resources)
+	r.Log.Info("👑️ Hyperqueue", "Pod.Resources", resources)
 	if err != nil {
-		r.Log.Info("🌀 Hyperqueue", "Pod.Resources", resources)
+		r.Log.Error(err, "❌ Hyperqueue", "Pod.Resources", resources)
 		return job, err
 	}
 	jobspec.Template.Spec.Overhead = resources
@@ -161,6 +171,11 @@ func (r *HyperqueueReconciler) getJob(
 		mounts,
 		entrypoint,
 	)
+	// Error creating containers
+	if err != nil {
+		r.Log.Error(err, "❌ Hyperqueue", "Pod.Resources", resources)
+		return job, err
+	}
 	jobspec.Template.Spec.Containers = containers
 	job.Template.Spec = jobspec
 	return job, err

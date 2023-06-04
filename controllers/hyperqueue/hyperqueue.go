@@ -95,7 +95,8 @@ func (r *HyperqueueReconciler) getCluster(
 					"Namespace:", job.Namespace,
 					"Name:", job.Name,
 				)
-				return job, ctrl.Result{}, err
+				// If there is an error, return the existing (empty)
+				return existing, ctrl.Result{}, err
 			}
 
 			r.Log.Info(
@@ -112,7 +113,7 @@ func (r *HyperqueueReconciler) getCluster(
 					"Namespace:", job.Namespace,
 					"Name:", job.Name,
 				)
-				return job, ctrl.Result{}, err
+				return existing, ctrl.Result{}, err
 			}
 			// Successful - return and requeue
 			return job, ctrl.Result{Requeue: true}, nil
@@ -159,6 +160,7 @@ func (r *HyperqueueReconciler) getConfigMap(
 		data["start-server"] = serverStart
 		data["start-worker"] = workerStart
 	}
+	fmt.Println(data)
 
 	// Create the config map with respective data!
 	cm = &corev1.ConfigMap{
