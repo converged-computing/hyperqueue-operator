@@ -46,6 +46,9 @@ spec:
                 description: Release of Hyperqueue to installed (if hq binary not
                   found in PATH)
                 type: string
+              interactive:
+                description: Interactive mode keeps the cluster running
+                type: boolean
               resources:
                 additionalProperties:
                   anyOf:

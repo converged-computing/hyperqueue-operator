@@ -13,7 +13,10 @@ spec:
   # One server, one worker
   size: 2
 
+  # Interactive mode to keep it running
+  interactive: true
+
   # use an ubuntu base for the worker and server
   server:
     image: ubuntu
-    command: echo hello world
+    command: echo hello-world

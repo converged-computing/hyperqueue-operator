@@ -52,6 +52,9 @@ spec:
                 default: 0.15.0
                 description: Release of Hyperqueue to installed (if hq binary not found in PATH)
                 type: string
+              interactive:
+                description: Interactive mode keeps the cluster running
+                type: boolean
               resources:
                 additionalProperties:
                   anyOf:
@@ -694,7 +697,8 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: vanessa/hyperqueue-operator:test
+        image: ghcr.io/converged-computing/hyperqueue-operator:latest
+        imagePullPolicy: Always
         livenessProbe:
           httpGet:
             path: /healthz

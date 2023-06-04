@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This script handles start logic for the broker
+# This script handles shared start logic
 {{template "init" .}}
 
 # Start the server
@@ -12,3 +12,5 @@ else
     hq server start &
     hq server submit $@
 fi
+
+{{template "exit" .}}

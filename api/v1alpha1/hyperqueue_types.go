@@ -43,6 +43,10 @@ type HyperqueueSpec struct {
 	// Size of the hyperqueue (1 server + (N-1) nodes)
 	Size int32 `json:"size"`
 
+	// Interactive mode keeps the cluster running
+	// +optional
+	Interactive bool `json:"interactive"`
+
 	// Time limit for the job
 	// Approximately one year. This cannot be zero or job won't start
 	// +kubebuilder:default=31500000

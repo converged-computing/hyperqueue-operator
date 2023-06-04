@@ -13,7 +13,7 @@ This isn't tested or working yet (and I'm new to the tool so please don't expect
 mkdir hyperqueue-operator
 cd hyperqueue-operator/
 operator-sdk init --domain flux-framework.org --repo github.com/converged-computing/hyperqueue-operator
-operator-sdk create api --group hyperqueues --version v1alpha1 --kind Hyperqueue --resource --controller
+operator-sdk create api --version v1alpha1 --kind Hyperqueue --resource --controller
 ```
 
 ## Getting Started
@@ -41,6 +41,9 @@ Generate the custom resource definition
 ```bash
 # Build and push the image, and generate the examples/dist/hyperqueue-operator-dev.yaml
 $ make test-deploy DEVIMG=<some-registry>/hyperqueue-operator:tag
+
+# As an example
+$ make test-deploy DEVIMG=vanessa/hyperqueue-operator:test
 ```
 
 Apply the new config!
@@ -61,8 +64,6 @@ When you are done, cleanup.
 ```bash
 $ kind delete cluster
 ```
-
-
 
 ### How it works
 
