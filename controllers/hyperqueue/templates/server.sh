@@ -8,10 +8,11 @@ echo "Hello, I am a server with $(hostname)"
 # We will need to copy access.json to our workdir so we have write
 {{template "server-dir" .}}
 
+sleep infinity
 if [ "$@" == "" ]; then
-    hq server start --server-dir ./hq
+    hq server start --access-file=./hq/access.json
 else
-    hq server start --server-dir ./hq &
+    hq server start --access-file=./hq/access.json &
     hq submit $@
 fi
 

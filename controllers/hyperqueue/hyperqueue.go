@@ -42,7 +42,7 @@ func (r *HyperqueueReconciler) ensureHyperqueue(
 
 	// Create headless service for the Hyperqueue cluster
 	selector := map[string]string{"cluster-name": cluster.Name}
-	result, err = r.exposeServices(ctx, cluster, serviceName, selector)
+	result, err = r.exposeServices(ctx, cluster, selector)
 	if err != nil {
 		return result, err
 	}

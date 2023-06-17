@@ -80,6 +80,12 @@ spec:
                     default: ubuntu
                     description: Image to use for hyperqueue
                     type: string
+                  port:
+                    description: Port for hyperqueue to use. Since we have a headless
+                      service, this is not represented in the operator, just in starting
+                      the server or a worker
+                    format: int32
+                    type: integer
                   ports:
                     description: Ports to be exposed to other containers in the cluster
                       We take a single list of integers and map to the same
@@ -116,6 +122,9 @@ spec:
                     description: Working directory
                     type: string
                 type: object
+              serviceName:
+                description: Name for the cluster service
+                type: string
               size:
                 description: Size of the hyperqueue (1 server + (N-1) nodes)
                 format: int32
@@ -144,6 +153,12 @@ spec:
                     default: ubuntu
                     description: Image to use for hyperqueue
                     type: string
+                  port:
+                    description: Port for hyperqueue to use. Since we have a headless
+                      service, this is not represented in the operator, just in starting
+                      the server or a worker
+                    format: int32
+                    type: integer
                   ports:
                     description: Ports to be exposed to other containers in the cluster
                       We take a single list of integers and map to the same

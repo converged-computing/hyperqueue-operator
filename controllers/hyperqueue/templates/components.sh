@@ -15,7 +15,8 @@ function download() {
 }
 
 # If hyperqueue isn't installed, install it
-which hq > /dev/null 2>&1 || (download > /dev/null 2>&1);
+# which hq > /dev/null 2>&1 || (download > /dev/null 2>&1);
+# Download development version for now
 
 # The working directory should be set by the CRD or the container
 workdir=${PWD}
@@ -31,6 +32,6 @@ mkdir -p ${workdir}
 {{ end }}
 
 {{define "server-dir"}}
-mkdir -p ./hq/001
-cp /hyperqueue_operator/access.json ./hq/001/access.json
+mkdir -p ./hq
+cp /hyperqueue_operator/access.json ./hq/access.json
 {{ end }}

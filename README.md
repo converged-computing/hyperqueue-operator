@@ -39,6 +39,15 @@ or development version (this is what I did):
 
 ```bash
 $ kubectl apply --server-side -k github.com/kubernetes-sigs/jobset/config/default?ref=main
+
+# This is right before upgrade to v1alpha2, or June 2nd when I was testing!
+# This is also a strategy for deploying a test version
+git clone https://github.com/kubernetes-sigs/jobset /tmp/jobset
+cd /tmp/jobset
+git checkout 93bd85c76fc8afa79b4b5c6d1df9075c99c9f22d
+IMAGE_TAG=vanessa/jobset:test make image-build
+IMAGE_TAG=vanessa/jobset:test make image-push
+IMAGE_TAG=vanessa/jobset:test make deploy
 ```
 
 Generate the custom resource definition

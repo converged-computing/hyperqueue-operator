@@ -31,6 +31,10 @@ type HyperqueueSpec struct {
 	// Server is the main server to run hyperqueue
 	Server Node `json:"server"`
 
+	// Name for the cluster service
+	//+optional
+	ServiceName string `json:"serviceName"`
+
 	// Worker is the worker node spec
 	// Defaults to be same spec as the server
 	//+optional
@@ -69,6 +73,13 @@ type Node struct {
 	// +default="ubuntu"
 	// +optional
 	Image string `json:"image"`
+
+	// Port for hyperqueue to use.
+	// Since we have a headless service, this
+	// is not represented in the operator, just
+	// in starting the server or a worker
+	// +optional
+	Port int32 `json:"port"`
 
 	// Resources include limits and requests
 	// +optional
@@ -127,6 +138,21 @@ type Resource map[string]intstr.IntOrString
 
 // Validate the Hyperqueue
 func (hq *Hyperqueue) Validate() bool {
+
+	// These are fairly arbitrary
+	if hq.Spec.Server.Port == 0 {
+		hq.Spec.Server.Port = 6789
+	}
+	if hq.Spec.Worker.Port == 0 {
+		hq.Spec.Worker.Port = 1234
+	}
+	// TODO cannot compare to empty structure later!
+	if hq.Spec.Worker.Image == "" {
+		hq.Spec.Worker.Image = hq.Spec.Server.Image
+	}
+	if hq.Spec.ServiceName == "" {
+		hq.Spec.ServiceName = "hq-service"
+	}
 	return true
 }
 

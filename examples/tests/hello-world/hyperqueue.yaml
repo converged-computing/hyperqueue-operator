@@ -13,12 +13,13 @@ spec:
   # One server, one worker
   size: 2
 
-  # Interactive mode to keep it running
+  # Interactive mode to keep it running (sleeps after cluster start)
   interactive: true
 
   # use an ubuntu base for the worker and server
   server:
-    image: ubuntu
+    # image: ubuntu
+    image: vanessa/hyperqueue:access-test
     command: echo hello world
-    commands: 
-      init: apt-get update && apt-get install -y wget
+    #commands: 
+    #  init: apt-get update && apt-get install -y wget
