@@ -49,6 +49,20 @@ spec:
               interactive:
                 description: Interactive mode keeps the cluster running
                 type: boolean
+              job:
+                description: If launching a job, control the spec here
+                properties:
+                  log:
+                    description: Name for the log file
+                    type: string
+                  name:
+                    description: Name for the job
+                    type: string
+                  nodes:
+                    description: Nodes for the job (defaults to 0 for 1)
+                    format: int64
+                    type: integer
+                type: object
               resources:
                 additionalProperties:
                   anyOf:

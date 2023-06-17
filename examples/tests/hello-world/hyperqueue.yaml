@@ -10,16 +10,23 @@ metadata:
   namespace: hyperqueue-operator
 spec:
 
-  # One server, one worker
-  size: 2
+  # One server, two workers
+  size: 3
 
   # Interactive mode to keep it running (sleeps after cluster start)
   interactive: true
 
+  # Run lammps as the original job on 2 nodes
+  job:
+    nodes: 2
+    name: lammps
+    log: log.out
+
   # use an ubuntu base for the worker and server
   server:
     # image: ubuntu
-    image: vanessa/hyperqueue:access-test
-    command: echo hello world
-    #commands: 
-    #  init: apt-get update && apt-get install -y wget
+    image: vanessa/hyperqueue:access-lammps-test
+    
+    # Note that number of processes matches nodes 2 above. We could also add --cpus instead of --nodes
+    command: mpirun -np 2 --map-by socket lmp -v x 2 -v y 2 -v z 2 -in in.reaxc.hns -nocite
+    workingDir: /opt/lammps/examples/reaxff/HNS

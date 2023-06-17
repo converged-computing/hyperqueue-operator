@@ -40,6 +40,10 @@ type HyperqueueSpec struct {
 	//+optional
 	Worker Node `json:"worker"`
 
+	// If launching a job, control the spec here
+	//+optional
+	Job Job `json:"job"`
+
 	// Release of Hyperqueue to installed (if hq binary not found in PATH)
 	// +kubebuilder:default="0.15.0"
 	// +default="0.15.0"
@@ -63,6 +67,21 @@ type HyperqueueSpec struct {
 	// Resources include limits and requests
 	// +optional
 	Resources Resource `json:"resources"`
+}
+
+type Job struct {
+
+	// Nodes for the job (defaults to 0 for 1)
+	// +optional
+	Nodes int64 `json:"nodes"`
+
+	// Name for the job
+	// +optional
+	Name string `json:"name"`
+
+	// Name for the log file
+	// +optional
+	Log string `json:"log"`
 }
 
 // Node corresponds to a pod (server or worker)
@@ -152,6 +171,9 @@ func (hq *Hyperqueue) Validate() bool {
 	}
 	if hq.Spec.ServiceName == "" {
 		hq.Spec.ServiceName = "hq-service"
+	}
+	if hq.Spec.Job.Name == "" {
+		hq.Spec.Job.Name = "hq-job"
 	}
 	return true
 }

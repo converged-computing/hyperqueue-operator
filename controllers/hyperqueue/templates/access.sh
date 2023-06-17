@@ -7,7 +7,7 @@
 # This should start and exit cleanly
 # For now use the same port for server and worker, not sure why should be different?
 mkdir -p /tmp/access
-hq server generate-access operator-access.json --client-port={{ .Spec.Server.Port }} --worker-port={{ .Spec.Server.Port }} --host {{ .ClusterName }}-server-0-0.{{ .Spec.ServiceName }}.hyperqueue-operator.svc.cluster.local
+hq server generate-access operator-access.json --client-port={{ .Spec.Server.Port }} --worker-port={{ .Spec.Worker.Port }} --host {{ .ClusterName }}-server-0-0.{{ .Spec.ServiceName }}.hyperqueue-operator.svc.cluster.local
 
 sleep 2
 echo "CUT HERE"
