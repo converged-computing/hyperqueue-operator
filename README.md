@@ -170,7 +170,7 @@ Setting up Verlet run ...
   Current step  : 0
   Time step     : 0.1
 yPer MPI rank memory allocation (min/avg/max) = 143.9 | 143.9 | 143.9 Mbytes
-Step Temp PotEng Press E_vdwl E_coul Volume 
+Step Temp PotEng Press E_vdwl Ecoul Volume 
 X       0          300   -113.27833    437.52118   -111.57687   -1.7014647    27418.867 
 X      10    299.38517   -113.27631    1439.2824   -111.57492   -1.7013813    27418.867 
 X      20    300.27107   -113.27884     3764.342   -111.57762   -1.7012247    27418.867 
