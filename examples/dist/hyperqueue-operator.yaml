@@ -30,7 +30,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Hyperqueue is the Schema for the hyperqueues API
+        description: Hyperqueue is the Schema for the Hyperqueues API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -43,15 +43,22 @@ spec:
           spec:
             description: HyperqueueSpec defines the desired state of Hyperqueue
             properties:
+              HyperqueueVersion:
+                default: 0.15.0
+                description: Release of Hyperqueue to installed (if hq binary not found in PATH)
+                type: string
+              commands:
+                description: Global commands to run on all nodes
+                properties:
+                  init:
+                    description: Init runs before anything in both scripts
+                    type: string
+                type: object
               deadlineSeconds:
                 default: 31500000
                 description: Time limit for the job Approximately one year. This cannot be zero or job won't start
                 format: int64
                 type: integer
-              hyperqueueVersion:
-                default: 0.15.0
-                description: Release of Hyperqueue to installed (if hq binary not found in PATH)
-                type: string
               interactive:
                 description: Interactive mode keeps the cluster running
                 type: boolean
@@ -78,13 +85,13 @@ spec:
                 description: Resources include limits and requests
                 type: object
               server:
-                description: Server is the main server to run hyperqueue
+                description: Server is the main server to run Hyperqueue
                 properties:
                   command:
                     description: Command will be honored by a server node
                     type: string
                   commands:
-                    description: Commands to run around different parts of the hyperqueu setup
+                    description: Commands to run around different parts of the hyperqueue setup
                     properties:
                       init:
                         description: Init runs before anything in both scripts
@@ -97,10 +104,10 @@ spec:
                     type: object
                   image:
                     default: ubuntu
-                    description: Image to use for hyperqueue
+                    description: Image to use for Hyperqueue
                     type: string
                   port:
-                    description: Port for hyperqueue to use. Since we have a headless service, this is not represented in the operator, just in starting the server or a worker
+                    description: Port for Hyperqueue to use. Since we have a headless service, this is not represented in the operator, just in starting the server or a worker
                     format: int32
                     type: integer
                   ports:
@@ -142,7 +149,7 @@ spec:
                 description: Name for the cluster service
                 type: string
               size:
-                description: Size of the hyperqueue (1 server + (N-1) nodes)
+                description: Size of the Hyperqueue (1 server + (N-1) nodes)
                 format: int32
                 type: integer
               worker:
@@ -152,7 +159,7 @@ spec:
                     description: Command will be honored by a server node
                     type: string
                   commands:
-                    description: Commands to run around different parts of the hyperqueu setup
+                    description: Commands to run around different parts of the hyperqueue setup
                     properties:
                       init:
                         description: Init runs before anything in both scripts
@@ -165,10 +172,10 @@ spec:
                     type: object
                   image:
                     default: ubuntu
-                    description: Image to use for hyperqueue
+                    description: Image to use for Hyperqueue
                     type: string
                   port:
-                    description: Port for hyperqueue to use. Since we have a headless service, this is not represented in the operator, just in starting the server or a worker
+                    description: Port for Hyperqueue to use. Since we have a headless service, this is not represented in the operator, just in starting the server or a worker
                     format: int32
                     type: integer
                   ports:

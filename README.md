@@ -78,13 +78,111 @@ See logs for the operator
 $ kubectl logs -n hyperqueue-operator-system hyperqueue-operator-controller-manager-6f6945579-9pknp 
 ```
 
+#### Hello World Example
+
 Create a "hello-world" interactive cluster:
 
 ```bash
 $ kubectl apply -f examples/tests/hello-world/hyperqueue.yaml 
 ```
 
-Look at the logs to see the worker/server starting:
+After the access pod runs and generates the node access file (which you can inspect):
+
+<details>
+
+<summary>Node access.json generation</summary>
+
+```console
+$ kubectl logs -n hyperqueue-operator hyperqueue-sample-access 
+Get:1 http://security.ubuntu.com/ubuntu jammy-security InRelease [110 kB]
+Get:2 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]       
+Get:3 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [938 kB]
+Get:4 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [119 kB]
+Get:5 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [108 kB]
+Get:6 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+Get:7 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [631 kB]
+Get:8 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+Get:9 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [36.3 kB]
+Get:10 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [541 kB]
+Get:11 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1792 kB]    
+Get:12 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [545 kB]
+Get:14 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [42.2 kB]
+Get:15 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [919 kB]
+Get:16 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1191 kB]
+Get:17 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [27.0 kB]
+Get:18 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [49.4 kB]
+Fetched 25.2 MB in 5s (4622 kB/s)  
+Reading package lists... Done
+2023-06-21T00:59:18Z INFO Storing access file as 'operator-access.json'
+CUT HERE
+{
+  "version": "nightly-2023-06-20-db011ed5a3faecf31168709417cd8a736a297a50",
+  "server_uid": "VhbvXU",
+  "client": {
+    "host": "hyperqueue-sample-server-0-0.hq-service.hyperqueue-operator.svc.cluster.local",
+    "port": 6789,
+    "secret_key": "4ba72c008fb72b29f8db96ba5c103fc29b73157afe10b6e53bb2832b5e152d46"
+  },
+  "worker": {
+    "host": "hyperqueue-sample-server-0-0.hq-service.hyperqueue-operator.svc.cluster.local",
+    "port": 1234,
+    "secret_key": "63ca4ca518a568da934edc7652c0178ca05436d720362693d257c68a2b7286aa"
+  }
+}
+```
+
+</details>
+
+You should be able to see the server start, submit the job, and then it will `--wait` for it to finish and cat the output
+file:
+
+```bash
+$ kubectl logs -n hyperqueue-operator hyperqueue-sample-server-0-0-fnnnj -f
+```
+```console
+Found extra command echo hello world
+2023-06-21T00:59:44Z INFO No online server found, starting a new server
+2023-06-21T00:59:44Z INFO Storing access file as '/root/.hq-server/001/access.json'
++------------------+-------------------------------------------------------------------------------+
+| Server directory | /root/.hq-server                                                              |
+| Server UID       | VhbvXU                                                                        |
+| Client host      | hyperqueue-sample-server-0-0.hq-service.hyperqueue-operator.svc.cluster.local |
+| Client port      | 6789                                                                          |
+| Worker host      | hyperqueue-sample-server-0-0.hq-service.hyperqueue-operator.svc.cluster.local |
+| Worker port      | 1234                                                                          |
+| Version          | nightly-2023-06-20-db011ed5a3faecf31168709417cd8a736a297a50                   |
+| Pid              | 2710                                                                          |
+| Start date       | 2023-06-21 00:59:44 UTC                                                       |
++------------------+-------------------------------------------------------------------------------+
+2023-06-21T00:59:44Z INFO Worker 1 registered from 10.244.0.22:60396
+2023-06-21T00:59:45Z INFO Worker 2 registered from 10.244.0.23:57144
+hq submit --wait --name hello-world --nodes 2 --log hello-world.out echo hello world
+Job submitted successfully, job ID: 1
+Wait finished in 46ms 37us 130ns: 1 job finished
+HQ:log
+      hello world
+```
+
+Since `interactive: true` is set, you can now shell in and interact with your cluster!
+See the [interactive example](#interactive-example) for how we did this with the LAMMPS example.
+Clean up the example when you are done:
+
+```bash
+$ kubectl delete -f examples/tests/hello-world/hyperqueue.yaml 
+```
+
+#### LAMMPS Example
+
+This example (for the time being) uses a custom image with hq already installed.
+
+```bash
+$ kubectl apply -f examples/tests/lammps/hyperqueue.yaml 
+```
+
+Note that since we are pulling large custom containers, this will take a little bit longer.
+Make sure the pods are running before trying to look at logs! When they are,
+look at the logs to see the worker/server starting:
 
 ```console
 2023-06-04T06:03:50Z INFO No online server found, starting a new server
@@ -211,6 +309,12 @@ Dangerous builds not checked
 Total wall time: 0:00:12
 ```
 
+In the above, we see the two workers registering, and then MPI/LAMMPS running with 2 processes
+(one thread per node I think). Akin to the first example, we have `interactive: true` here so 
+you can proceed to the next section for an interactive example.
+
+#### Interactive Example
+
 Since our job sets interactive: true, this means the cluster stays running after the job is finished,
 and we can interactively shell in and submit a job, e.g.,:
 
@@ -243,6 +347,9 @@ $ hq job list --all
 
 If you don't specify a `--log` file, depending on where you run it, the logs can show up on any worker,
 typically in the same working directory in a directory called `log-N` (e.g., log-4). And that's it!
+
+#### Cleanup
+
 When you are finished:
 
 ```bash

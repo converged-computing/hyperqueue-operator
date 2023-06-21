@@ -28,7 +28,7 @@ type HyperqueueSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Server is the main server to run hyperqueue
+	// Server is the main server to run Hyperqueue
 	Server Node `json:"server"`
 
 	// Name for the cluster service
@@ -48,10 +48,14 @@ type HyperqueueSpec struct {
 	// +kubebuilder:default="0.15.0"
 	// +default="0.15.0"
 	// +optional
-	HyperqueueVersion string `json:"hyperqueueVersion,omitempty"`
+	HyperqueueVersion string `json:"HyperqueueVersion,omitempty"`
 
-	// Size of the hyperqueue (1 server + (N-1) nodes)
+	// Size of the Hyperqueue (1 server + (N-1) nodes)
 	Size int32 `json:"size"`
+
+	// Global commands to run on all nodes
+	// +optional
+	Commands Commands `json:"commands,omitempty"`
 
 	// Interactive mode keeps the cluster running
 	// +optional
@@ -87,13 +91,13 @@ type Job struct {
 // Node corresponds to a pod (server or worker)
 type Node struct {
 
-	// Image to use for hyperqueue
+	// Image to use for Hyperqueue
 	// +kubebuilder:default="ubuntu"
 	// +default="ubuntu"
 	// +optional
 	Image string `json:"image"`
 
-	// Port for hyperqueue to use.
+	// Port for Hyperqueue to use.
 	// Since we have a headless service, this
 	// is not represented in the operator, just
 	// in starting the server or a worker
@@ -112,7 +116,7 @@ type Node struct {
 	// +optional
 	Command string `json:"command,omitempty"`
 
-	// Commands to run around different parts of the hyperqueu setup
+	// Commands to run around different parts of the hyperqueue setup
 	// +optional
 	Commands Commands `json:"commands,omitempty"`
 
@@ -201,7 +205,7 @@ type HyperqueueStatus struct{}
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Hyperqueue is the Schema for the hyperqueues API
+// Hyperqueue is the Schema for the Hyperqueues API
 type Hyperqueue struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -37,6 +37,7 @@ type NodeTemplate struct {
 	Node        api.Node
 	Spec        api.HyperqueueSpec
 	ClusterName string
+	Namespace   string
 }
 
 // combineTemplates into one "start"
@@ -58,6 +59,7 @@ func generateScript(cluster *api.Hyperqueue, node api.Node, startTemplate string
 		Node:        node,
 		Spec:        cluster.Spec,
 		ClusterName: cluster.Name,
+		Namespace:   cluster.Namespace,
 	}
 
 	// Wrap the named template to identify it later

@@ -105,6 +105,7 @@ func (in *HyperqueueSpec) DeepCopyInto(out *HyperqueueSpec) {
 	in.Server.DeepCopyInto(&out.Server)
 	in.Worker.DeepCopyInto(&out.Worker)
 	out.Job = in.Job
+	out.Commands = in.Commands
 	if in.Resources != nil {
 		in, out := &in.Resources, &out.Resources
 		*out = make(Resource, len(*in))
