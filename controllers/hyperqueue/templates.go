@@ -29,10 +29,15 @@ var startWorkerTemplate string
 //go:embed templates/components.sh
 var startComponents string
 
+//go:embed templates/access.sh
+var accessTemplate string
+
 // NodeTemplate populates a node entrypoint
 type NodeTemplate struct {
-	Node api.Node
-	Spec api.HyperqueueSpec
+	Node        api.Node
+	Spec        api.HyperqueueSpec
+	ClusterName string
+	Namespace   string
 }
 
 // combineTemplates into one "start"
@@ -50,10 +55,11 @@ func combineTemplates(listing ...string) (t *template.Template, err error) {
 
 // generateWorkerScript generates the main script to start everything up!
 func generateScript(cluster *api.Hyperqueue, node api.Node, startTemplate string) (string, error) {
-
 	nt := NodeTemplate{
-		Node: node,
-		Spec: cluster.Spec,
+		Node:        node,
+		Spec:        cluster.Spec,
+		ClusterName: cluster.Name,
+		Namespace:   cluster.Namespace,
 	}
 
 	// Wrap the named template to identify it later

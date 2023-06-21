@@ -24,24 +24,19 @@ import (
 	api "github.com/converged-computing/hyperqueue-operator/api/v1alpha1"
 )
 
-var (
-	serviceName = "hyperqueue-service"
-)
-
 // exposeService will expose services for job networking (headless)
 func (r *HyperqueueReconciler) exposeServices(
 	ctx context.Context,
 	cluster *api.Hyperqueue,
-	serviceName string,
 	selector map[string]string,
 ) (ctrl.Result, error) {
 
 	// This service is for the restful API
 	existing := &corev1.Service{}
-	err := r.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: cluster.Namespace}, existing)
+	err := r.Get(ctx, types.NamespacedName{Name: cluster.Spec.ServiceName, Namespace: cluster.Namespace}, existing)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			_, err = r.createHeadlessService(ctx, cluster, serviceName, selector)
+			_, err = r.createHeadlessService(ctx, cluster, selector)
 
 		}
 		return ctrl.Result{}, err
@@ -53,13 +48,12 @@ func (r *HyperqueueReconciler) exposeServices(
 func (r *HyperqueueReconciler) createHeadlessService(
 	ctx context.Context,
 	cluster *api.Hyperqueue,
-	serviceName string,
 	selector map[string]string,
 ) (*corev1.Service, error) {
 
-	r.Log.Info("Creating headless service with: ", serviceName, cluster.Namespace)
+	r.Log.Info("Creating headless service with: ", cluster.Spec.ServiceName, cluster.Namespace)
 	service := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{Name: serviceName, Namespace: cluster.Namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: cluster.Spec.ServiceName, Namespace: cluster.Namespace},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: "None",
 			Selector:  selector,

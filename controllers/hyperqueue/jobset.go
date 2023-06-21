@@ -98,7 +98,7 @@ func (r *HyperqueueReconciler) getJob(
 	}
 
 	job := jobset.ReplicatedJob{
-		Name: cluster.Name + "-" + entrypoint,
+		Name: entrypoint,
 
 		// This would allow pods to be reached by their hostnames!
 		// It doesn't work at the moment, but could if we can specify the service name
@@ -134,7 +134,7 @@ func (r *HyperqueueReconciler) getJob(
 			},
 			Spec: corev1.PodSpec{
 				// matches the service
-				Subdomain:     serviceName,
+				Subdomain:     cluster.Spec.ServiceName,
 				Volumes:       getVolumes(cluster),
 				RestartPolicy: corev1.RestartPolicyOnFailure,
 			},

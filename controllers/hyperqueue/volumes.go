@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	entrypointSuffix = "-entrypoint"
+	entrypointSuffix   = "-entrypoint"
+	accessVolumeSuffix = "-access-json"
 )
 
 // GetVolumeMounts returns read only volume for entrypoint scripts, etc.
@@ -39,7 +40,7 @@ func getVolumes(cluster *api.Hyperqueue) []corev1.Volume {
 
 	// Each of the server and nodes are given the entrypoint scripts
 	// Although they won't both use them, this makes debugging easier
-	runnerStartScripts := []corev1.KeyToPath{
+	runnerScripts := []corev1.KeyToPath{
 		{
 			Key:  "start-server",
 			Path: "start-server.sh",
@@ -49,6 +50,10 @@ func getVolumes(cluster *api.Hyperqueue) []corev1.Volume {
 			Key:  "start-worker",
 			Path: "start-worker.sh",
 			Mode: &makeExecutable,
+		},
+		{
+			Key:  accessKey,
+			Path: "access.json",
 		},
 	}
 
@@ -64,7 +69,8 @@ func getVolumes(cluster *api.Hyperqueue) []corev1.Volume {
 					},
 					// /hyperqueue_operator/start-worker.sh
 					// /hyperqueue_operator/start-server.sh
-					Items: runnerStartScripts,
+					// /hyperqueue_operator/access.json
+					Items: runnerScripts,
 				},
 			},
 		},
