@@ -28,22 +28,34 @@ type HyperqueueSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Server is the main server to run hyperqueue
+	// Server is the main server to run Hyperqueue
 	Server Node `json:"server"`
+
+	// Name for the cluster service
+	//+optional
+	ServiceName string `json:"serviceName"`
 
 	// Worker is the worker node spec
 	// Defaults to be same spec as the server
 	//+optional
 	Worker Node `json:"worker"`
 
+	// If launching a job, control the spec here
+	//+optional
+	Job Job `json:"job"`
+
 	// Release of Hyperqueue to installed (if hq binary not found in PATH)
-	// +kubebuilder:default="0.15.0"
-	// +default="0.15.0"
+	// +kubebuilder:default="0.16.0"
+	// +default="0.16.0"
 	// +optional
 	HyperqueueVersion string `json:"hyperqueueVersion,omitempty"`
 
-	// Size of the hyperqueue (1 server + (N-1) nodes)
+	// Size of the Hyperqueue (1 server + (N-1) nodes)
 	Size int32 `json:"size"`
+
+	// Global commands to run on all nodes
+	// +optional
+	Commands Commands `json:"commands,omitempty"`
 
 	// Interactive mode keeps the cluster running
 	// +optional
@@ -61,14 +73,36 @@ type HyperqueueSpec struct {
 	Resources Resource `json:"resources"`
 }
 
+type Job struct {
+
+	// Nodes for the job (defaults to 0 for 1)
+	// +optional
+	Nodes int64 `json:"nodes"`
+
+	// Name for the job
+	// +optional
+	Name string `json:"name"`
+
+	// Name for the log file
+	// +optional
+	Log string `json:"log"`
+}
+
 // Node corresponds to a pod (server or worker)
 type Node struct {
 
-	// Image to use for hyperqueue
+	// Image to use for Hyperqueue
 	// +kubebuilder:default="ubuntu"
 	// +default="ubuntu"
 	// +optional
 	Image string `json:"image"`
+
+	// Port for Hyperqueue to use.
+	// Since we have a headless service, this
+	// is not represented in the operator, just
+	// in starting the server or a worker
+	// +optional
+	Port int32 `json:"port"`
 
 	// Resources include limits and requests
 	// +optional
@@ -82,7 +116,7 @@ type Node struct {
 	// +optional
 	Command string `json:"command,omitempty"`
 
-	// Commands to run around different parts of the hyperqueu setup
+	// Commands to run around different parts of the hyperqueue setup
 	// +optional
 	Commands Commands `json:"commands,omitempty"`
 
@@ -127,6 +161,24 @@ type Resource map[string]intstr.IntOrString
 
 // Validate the Hyperqueue
 func (hq *Hyperqueue) Validate() bool {
+
+	// These are fairly arbitrary
+	if hq.Spec.Server.Port == 0 {
+		hq.Spec.Server.Port = 6789
+	}
+	if hq.Spec.Worker.Port == 0 {
+		hq.Spec.Worker.Port = 1234
+	}
+	// TODO cannot compare to empty structure later!
+	if hq.Spec.Worker.Image == "" {
+		hq.Spec.Worker.Image = hq.Spec.Server.Image
+	}
+	if hq.Spec.ServiceName == "" {
+		hq.Spec.ServiceName = "hq-service"
+	}
+	if hq.Spec.Job.Name == "" {
+		hq.Spec.Job.Name = "hq-job"
+	}
 	return true
 }
 
@@ -153,7 +205,7 @@ type HyperqueueStatus struct{}
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Hyperqueue is the Schema for the hyperqueues API
+// Hyperqueue is the Schema for the Hyperqueues API
 type Hyperqueue struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

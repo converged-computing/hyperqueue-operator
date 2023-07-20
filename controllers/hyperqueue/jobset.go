@@ -18,7 +18,12 @@ import (
 	api "github.com/converged-computing/hyperqueue-operator/api/v1alpha1"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	jobset "sigs.k8s.io/jobset/api/v1alpha1"
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
+)
+
+var (
+	serverJobName = "server"
+	workerJobName = "worker"
 )
 
 // newJobSet creates the jobset for the hyperqueue
@@ -26,11 +31,10 @@ func (r *HyperqueueReconciler) newJobSet(
 	cluster *api.Hyperqueue,
 ) (*jobset.JobSet, error) {
 
-	// When we have a success policy
-	// serverName := cluster.Name + "-server"
-
 	// When suspend is true we have a hard time debugging jobs, so keep false
 	suspend := false
+	enableDNSHostnames := false
+
 	jobs := jobset.JobSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cluster.Name,
@@ -39,12 +43,17 @@ func (r *HyperqueueReconciler) newJobSet(
 		Spec: jobset.JobSetSpec{
 
 			// The job is successful when the broker job finishes with completed (0)
-			//SuccessPolicy: &jobset.SuccessPolicy{
-			//	Operator:             jobset.OperatorAny,
-			//	TargetReplicatedJobs: []string{serverName},
-			//},
+			SuccessPolicy: &jobset.SuccessPolicy{
+				Operator:             jobset.OperatorAny,
+				TargetReplicatedJobs: []string{serverJobName},
+			},
 			FailurePolicy: &jobset.FailurePolicy{
 				MaxRestarts: 0,
+			},
+
+			Network: &jobset.Network{
+				EnableDNSHostnames: &enableDNSHostnames,
+				Subdomain:          cluster.Spec.ServiceName,
 			},
 
 			// This might be the control for child jobs (worker)
@@ -54,7 +63,7 @@ func (r *HyperqueueReconciler) newJobSet(
 	}
 
 	// Get leader server job, the parent in the JobSet
-	serverJob, err := r.getJob(cluster, cluster.Spec.Server, 1, "server", true)
+	serverJob, err := r.getJob(cluster, cluster.Spec.Server, 1, serverJobName, true)
 	if err != nil {
 		r.Log.Error(err, "There was an error getting the server ReplicatedJob")
 		return &jobs, err
@@ -64,7 +73,7 @@ func (r *HyperqueueReconciler) newJobSet(
 	workerNodes := cluster.WorkerNodes()
 	if workerNodes > 0 {
 
-		workerJob, err := r.getJob(cluster, cluster.WorkerNode(), workerNodes, "worker", true)
+		workerJob, err := r.getJob(cluster, cluster.WorkerNode(), workerNodes, workerJobName, true)
 		if err != nil {
 			r.Log.Error(err, "There was an error getting the worker ReplicatedJob")
 			return &jobs, err
@@ -89,7 +98,6 @@ func (r *HyperqueueReconciler) getJob(
 
 	backoffLimit := int32(100)
 	podLabels := r.getPodLabels(cluster)
-	enableDNSHostnames := false
 	completionMode := batchv1.NonIndexedCompletion
 
 	// Is this an indexed job?
@@ -98,15 +106,7 @@ func (r *HyperqueueReconciler) getJob(
 	}
 
 	job := jobset.ReplicatedJob{
-		Name: cluster.Name + "-" + entrypoint,
-
-		// This would allow pods to be reached by their hostnames!
-		// It doesn't work at the moment, but could if we can specify the service name
-		// <jobSet.name>-<spec.replicatedJob.name>-<job-index>-<pod-index>.<jobSet.name>-<spec.replicatedJob.name>
-		Network: &jobset.Network{
-			EnableDNSHostnames: &enableDNSHostnames,
-		},
-
+		Name: entrypoint,
 		Template: batchv1.JobTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      cluster.Name,
@@ -134,7 +134,7 @@ func (r *HyperqueueReconciler) getJob(
 			},
 			Spec: corev1.PodSpec{
 				// matches the service
-				Subdomain:     serviceName,
+				Subdomain:     cluster.Spec.ServiceName,
 				Volumes:       getVolumes(cluster),
 				RestartPolicy: corev1.RestartPolicyOnFailure,
 			},

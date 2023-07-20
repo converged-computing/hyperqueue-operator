@@ -15,13 +15,14 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cri-api/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	jobset "sigs.k8s.io/jobset/api/v1alpha1"
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 
 	api "github.com/converged-computing/hyperqueue-operator/api/v1alpha1"
 	"github.com/go-logr/logr"
@@ -30,8 +31,10 @@ import (
 // HyperqueueReconciler reconciles a Hyperqueue object
 type HyperqueueReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-	Log    logr.Logger
+	Scheme     *runtime.Scheme
+	Log        logr.Logger
+	RESTClient rest.Interface
+	RESTConfig *rest.Config
 }
 
 //+kubebuilder:rbac:groups=flux-framework.org,resources=hyperqueues,verbs=get;list;watch;create;update;patch;delete

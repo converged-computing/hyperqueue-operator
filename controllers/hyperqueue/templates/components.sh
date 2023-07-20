@@ -3,8 +3,9 @@
 # Shared components for the broker and worker template
 {{define "init"}}
 
-# Initialization commands
-{{ .Node.Commands.Init}} > /dev/null
+# Initialization commands - first global, then node specific
+{{ .Spec.Commands.Init}} > /dev/null 2>&1
+{{ .Node.Commands.Init}} > /dev/null 2>&1
 
 which wget > /dev/null 2>&1 || (echo "Please install wget"; exit);
 
@@ -15,8 +16,8 @@ function download() {
 }
 
 # If hyperqueue isn't installed, install it
-which hq > /dev/null 2>&1 || (download);
-which hq
+which hq > /dev/null 2>&1 || (download > /dev/null 2>&1);
+# Download development version for now
 
 # The working directory should be set by the CRD or the container
 workdir=${PWD}
@@ -29,4 +30,9 @@ mkdir -p ${workdir}
 
 {{define "exit"}}
 {{ if .Spec.Interactive }}sleep infinity{{ end }}
+{{ end }}
+
+{{define "server-dir"}}
+mkdir -p ./hq
+cp /hyperqueue_operator/access.json ./hq/access.json
 {{ end }}

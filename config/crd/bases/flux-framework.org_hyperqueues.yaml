@@ -18,7 +18,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Hyperqueue is the Schema for the hyperqueues API
+        description: Hyperqueue is the Schema for the Hyperqueues API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -35,6 +35,13 @@ spec:
           spec:
             description: HyperqueueSpec defines the desired state of Hyperqueue
             properties:
+              commands:
+                description: Global commands to run on all nodes
+                properties:
+                  init:
+                    description: Init runs before anything in both scripts
+                    type: string
+                type: object
               deadlineSeconds:
                 default: 31500000
                 description: Time limit for the job Approximately one year. This cannot
@@ -42,13 +49,27 @@ spec:
                 format: int64
                 type: integer
               hyperqueueVersion:
-                default: 0.15.0
+                default: 0.16.0
                 description: Release of Hyperqueue to installed (if hq binary not
                   found in PATH)
                 type: string
               interactive:
                 description: Interactive mode keeps the cluster running
                 type: boolean
+              job:
+                description: If launching a job, control the spec here
+                properties:
+                  log:
+                    description: Name for the log file
+                    type: string
+                  name:
+                    description: Name for the job
+                    type: string
+                  nodes:
+                    description: Nodes for the job (defaults to 0 for 1)
+                    format: int64
+                    type: integer
+                type: object
               resources:
                 additionalProperties:
                   anyOf:
@@ -58,13 +79,13 @@ spec:
                 description: Resources include limits and requests
                 type: object
               server:
-                description: Server is the main server to run hyperqueue
+                description: Server is the main server to run Hyperqueue
                 properties:
                   command:
                     description: Command will be honored by a server node
                     type: string
                   commands:
-                    description: Commands to run around different parts of the hyperqueu
+                    description: Commands to run around different parts of the hyperqueue
                       setup
                     properties:
                       init:
@@ -78,8 +99,14 @@ spec:
                     type: object
                   image:
                     default: ubuntu
-                    description: Image to use for hyperqueue
+                    description: Image to use for Hyperqueue
                     type: string
+                  port:
+                    description: Port for Hyperqueue to use. Since we have a headless
+                      service, this is not represented in the operator, just in starting
+                      the server or a worker
+                    format: int32
+                    type: integer
                   ports:
                     description: Ports to be exposed to other containers in the cluster
                       We take a single list of integers and map to the same
@@ -116,8 +143,11 @@ spec:
                     description: Working directory
                     type: string
                 type: object
+              serviceName:
+                description: Name for the cluster service
+                type: string
               size:
-                description: Size of the hyperqueue (1 server + (N-1) nodes)
+                description: Size of the Hyperqueue (1 server + (N-1) nodes)
                 format: int32
                 type: integer
               worker:
@@ -128,7 +158,7 @@ spec:
                     description: Command will be honored by a server node
                     type: string
                   commands:
-                    description: Commands to run around different parts of the hyperqueu
+                    description: Commands to run around different parts of the hyperqueue
                       setup
                     properties:
                       init:
@@ -142,8 +172,14 @@ spec:
                     type: object
                   image:
                     default: ubuntu
-                    description: Image to use for hyperqueue
+                    description: Image to use for Hyperqueue
                     type: string
+                  port:
+                    description: Port for Hyperqueue to use. Since we have a headless
+                      service, this is not represented in the operator, just in starting
+                      the server or a worker
+                    format: int32
+                    type: integer
                   ports:
                     description: Ports to be exposed to other containers in the cluster
                       We take a single list of integers and map to the same

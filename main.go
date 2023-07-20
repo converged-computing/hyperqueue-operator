@@ -25,15 +25,18 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	api "github.com/converged-computing/hyperqueue-operator/api/v1alpha1"
 	controllers "github.com/converged-computing/hyperqueue-operator/controllers/hyperqueue"
-	jobset "sigs.k8s.io/jobset/api/v1alpha1"
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -92,11 +95,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Crete the new reconciler
+	// Create a RESTful client for the MiniCluster controller. We need this to actually
+	// interact with pods in the cluster!
+	gvk := schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
+		Kind:    "Pod",
+	}
+	restClient, err := apiutil.RESTClientForGVK(gvk, false, mgr.GetConfig(), serializer.NewCodecFactory(mgr.GetScheme()), nil)
+	if err != nil {
+		setupLog.Error(err, "unable to create REST client", "controller", restClient)
+	}
+
+	// Create the new reconciler
 	if err = (&controllers.HyperqueueReconciler{
-		Log:    ctrl.Log.WithName("hyperqueue-reconciler"),
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Log:        ctrl.Log.WithName("hyperqueue-reconciler"),
+		Client:     mgr.GetClient(),
+		Scheme:     mgr.GetScheme(),
+		RESTConfig: mgr.GetConfig(),
+		RESTClient: restClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Hyperqueue")
 		os.Exit(1)
