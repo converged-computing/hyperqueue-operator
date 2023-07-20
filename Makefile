@@ -316,5 +316,5 @@ arm-deploy: manifests kustomize
 	$(KUSTOMIZE) build config/default > examples/dist/hyperqueue-operator-arm.yaml
 
 .PHONY: pre-push
-pre-push: generate build-config build-config-arm
+pre-push: generate build-config-arm build-config
 	git status
