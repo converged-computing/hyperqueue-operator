@@ -45,8 +45,8 @@ type HyperqueueSpec struct {
 	Job Job `json:"job"`
 
 	// Release of Hyperqueue to installed (if hq binary not found in PATH)
-	// +kubebuilder:default="0.15.0"
-	// +default="0.15.0"
+	// +kubebuilder:default="0.16.0"
+	// +default="0.16.0"
 	// +optional
 	HyperqueueVersion string `json:"HyperqueueVersion,omitempty"`
 

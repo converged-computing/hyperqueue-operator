@@ -5,17 +5,6 @@
 This will be an operator that attempts to use [hyperqueue](https://github.com/It4innovations/hyperqueue) to create a cluster to run tasks.
 This isn't tested or working yet (and I'm new to the tool so please don't expect it to work yet). Thank you!
 
-## Development
-
-### Creation
-
-```bash
-mkdir hyperqueue-operator
-cd hyperqueue-operator/
-operator-sdk init --domain flux-framework.org --repo github.com/converged-computing/hyperqueue-operator
-operator-sdk create api --version v1alpha1 --kind Hyperqueue --resource --controller
-```
-
 ## Getting Started
 
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
@@ -32,25 +21,11 @@ $ kind create cluster
 You'll need to install the jobset API, which eventually will be added to Kubernetes proper (but is not yet!)
 
 ```bash
-VERSION=v0.1.3
+VERSION=v0.2.0
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/jobset/releases/download/$VERSION/manifests.yaml
 ```
-or development version (this is what I did):
 
-```bash
-$ kubectl apply --server-side -k github.com/kubernetes-sigs/jobset/config/default?ref=main
-
-# This is right before upgrade to v1alpha2, or June 2nd when I was testing!
-# This is also a strategy for deploying a test version
-git clone https://github.com/kubernetes-sigs/jobset /tmp/jobset
-cd /tmp/jobset
-git checkout 93bd85c76fc8afa79b4b5c6d1df9075c99c9f22d
-IMAGE_TAG=vanessa/jobset:test make image-build
-IMAGE_TAG=vanessa/jobset:test make image-push
-IMAGE_TAG=vanessa/jobset:test make deploy
-```
-
-Generate the custom resource definition
+Generate the custom resource definition container (if you are developing):
 
 ```bash
 # Build and push the image, and generate the examples/dist/hyperqueue-operator-dev.yaml
@@ -72,7 +47,7 @@ Apply the new config!
 $ kubectl apply -f examples/dist/hyperqueue-operator-dev.yaml
 ```
 
-See logs for the operator
+See logs for the operator to make sure it is running.
 
 ```bash
 $ kubectl logs -n hyperqueue-operator-system hyperqueue-operator-controller-manager-6f6945579-9pknp 
@@ -320,8 +295,13 @@ and we can interactively shell in and submit a job, e.g.,:
 
 ```bash
 $ kubectl exec -it -n hyperqueue-operator hyperqueue-sample-server-0-0-bbbh2 bash
+
+# Running manually on the command line
 $ mpirun -np 2 --map-by socket lmp -v x 2 -v y 2 -v z 2 -in in.reaxc.hns -nocite
-Job submitted successfully, job ID: 1
+
+# Submitting the job
+$ hq submit mpirun -np 2 --map-by socket lmp -v x 2 -v y 2 -v z 2 -in in.reaxc.hns -nocite
+Job submitted successfully, job ID: 2
 ```
 
 It should be RUNNING fairly quickly:
@@ -334,15 +314,17 @@ $ hq job list
 |  1 | lmp  | RUNNING | 1     |
 +----+------+---------+-------+
 ```
-When it's done it will pop off the queue, and you can add `--all`
+
+When it's done it will pop off the queue, and you can add `--all`. Here we see our current running job and the previous one:
 
 ```bash
 $ hq job list --all
-+----+------+----------+-------+
-| ID | Name | State    | Tasks |
-+----+------+----------+-------+
-|  1 | lmp  | FINISHED | 1     |
-+----+------+----------+-------+
++----+--------+----------+-------+
+| ID | Name   | State    | Tasks |
++----+--------+----------+-------+
+|  1 | lammps | FINISHED | 1     |
+|  2 | mpirun | RUNNING  | 1     |
++----+--------+----------+-------+
 ```
 
 If you don't specify a `--log` file, depending on where you run it, the logs can show up on any worker,
@@ -356,6 +338,17 @@ When you are finished:
 $ kind delete cluster
 ```
 
+## Development
+
+### Creation
+
+```bash
+mkdir hyperqueue-operator
+cd hyperqueue-operator/
+operator-sdk init --domain flux-framework.org --repo github.com/converged-computing/hyperqueue-operator
+operator-sdk create api --version v1alpha1 --kind Hyperqueue --resource --controller
+```
+
 ### How it works
 
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
@@ -363,7 +356,7 @@ This project aims to follow the Kubernetes [Operator pattern](https://kubernetes
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/),
 which provide a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster.
 
-### Developer
+### Additional Submit Args
 
 There are a lot of arguments and ways we can customize submit (that likely we want to experiment with):
 
@@ -509,6 +502,24 @@ GLOBAL OPTIONS:
           
           [env: HQ_DEBUG=]
 ```
+
+### Deploy Development Jobset 
+
+or development version (this is what I did):
+
+```bash
+$ kubectl apply --server-side -k github.com/kubernetes-sigs/jobset/config/default?ref=0.2.0
+
+# This is right before upgrade to v1alpha2, or June 2nd when I was testing!
+# This is also a strategy for deploying a test version
+git clone https://github.com/kubernetes-sigs/jobset /tmp/jobset
+cd /tmp/jobset
+git checkout 93bd85c76fc8afa79b4b5c6d1df9075c99c9f22d
+IMAGE_TAG=vanessa/jobset:test make image-build
+IMAGE_TAG=vanessa/jobset:test make image-push
+IMAGE_TAG=vanessa/jobset:test make deploy
+```
+
 
 ## License
 

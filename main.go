@@ -36,7 +36,7 @@ import (
 
 	api "github.com/converged-computing/hyperqueue-operator/api/v1alpha1"
 	controllers "github.com/converged-computing/hyperqueue-operator/controllers/hyperqueue"
-	jobset "sigs.k8s.io/jobset/api/v1alpha1"
+	jobset "sigs.k8s.io/jobset/api/jobset/v1alpha2"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -102,7 +102,7 @@ func main() {
 		Version: "v1",
 		Kind:    "Pod",
 	}
-	restClient, err := apiutil.RESTClientForGVK(gvk, false, mgr.GetConfig(), serializer.NewCodecFactory(mgr.GetScheme()))
+	restClient, err := apiutil.RESTClientForGVK(gvk, false, mgr.GetConfig(), serializer.NewCodecFactory(mgr.GetScheme()), nil)
 	if err != nil {
 		setupLog.Error(err, "unable to create REST client", "controller", restClient)
 	}

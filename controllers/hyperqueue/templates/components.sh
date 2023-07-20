@@ -10,11 +10,8 @@
 which wget > /dev/null 2>&1 || (echo "Please install wget"; exit);
 
 function download() {
-    # This is just here for development, while our feature isn't provided in a release
-    wget https://github.com/It4innovations/hyperqueue/releases/download/nightly/hq-nightly-2023-06-20-db011ed5a3faecf31168709417cd8a736a297a50-linux-x64.tar.gz
-    # wget https://github.com/It4innovations/hyperqueue/releases/download/v{{ .Spec.HyperqueueVersion }}/hq-v{{ .Spec.HyperqueueVersion }}-linux-x64.tar.gz
-    # tar -xvzf hq-v{{ .Spec.HyperqueueVersion }}-linux-x64.tar.gz
-    tar -xzvf hq-nightly-2023-06-20-db011ed5a3faecf31168709417cd8a736a297a50-linux-x64.tar.gz
+    wget https://github.com/It4innovations/hyperqueue/releases/download/v{{ .Spec.HyperqueueVersion }}/hq-v{{ .Spec.HyperqueueVersion }}-linux-x64.tar.gz
+    tar -xvzf hq-v{{ .Spec.HyperqueueVersion }}-linux-x64.tar.gz
     mv hq /usr/bin/hq
 }
 

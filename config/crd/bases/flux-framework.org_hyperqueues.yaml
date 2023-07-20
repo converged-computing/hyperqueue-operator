@@ -36,7 +36,7 @@ spec:
             description: HyperqueueSpec defines the desired state of Hyperqueue
             properties:
               HyperqueueVersion:
-                default: 0.15.0
+                default: 0.16.0
                 description: Release of Hyperqueue to installed (if hq binary not
                   found in PATH)
                 type: string
