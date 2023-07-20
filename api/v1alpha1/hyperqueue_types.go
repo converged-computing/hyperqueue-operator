@@ -48,7 +48,7 @@ type HyperqueueSpec struct {
 	// +kubebuilder:default="0.16.0"
 	// +default="0.16.0"
 	// +optional
-	HyperqueueVersion string `json:"HyperqueueVersion,omitempty"`
+	HyperqueueVersion string `json:"hyperqueueVersion,omitempty"`
 
 	// Size of the Hyperqueue (1 server + (N-1) nodes)
 	Size int32 `json:"size"`

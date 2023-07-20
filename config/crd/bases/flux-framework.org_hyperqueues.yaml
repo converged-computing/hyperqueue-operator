@@ -35,11 +35,6 @@ spec:
           spec:
             description: HyperqueueSpec defines the desired state of Hyperqueue
             properties:
-              HyperqueueVersion:
-                default: 0.16.0
-                description: Release of Hyperqueue to installed (if hq binary not
-                  found in PATH)
-                type: string
               commands:
                 description: Global commands to run on all nodes
                 properties:
@@ -53,6 +48,11 @@ spec:
                   be zero or job won't start
                 format: int64
                 type: integer
+              hyperqueueVersion:
+                default: 0.16.0
+                description: Release of Hyperqueue to installed (if hq binary not
+                  found in PATH)
+                type: string
               interactive:
                 description: Interactive mode keeps the cluster running
                 type: boolean
