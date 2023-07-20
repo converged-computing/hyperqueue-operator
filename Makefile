@@ -48,6 +48,7 @@ endif
 
 # Image URL to use all building/pushing image targets
 IMG ?= ghcr.io/converged-computing/hyperqueue-operator:latest
+ARMIMG ?= ghcr.io/converged-computing/hyperqueue-operator:arm
 
 # Testing image (for development mostly)
 DEVIMG ?= ghcr.io/converged-computing/hyperqueue-operator:test
@@ -299,6 +300,21 @@ catalog-build: opm ## Build a catalog image.
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 
+.PHONY: arm-build
+arm-build: test ## Build docker image with the manager.
+	docker buildx build --platform linux/arm64 -t ${ARMIMG} .
+
+.PHONY: build-config-arm
+build-config-arm: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${ARMIMG}
+	$(KUSTOMIZE) build config/default > examples/dist/hyperqueue-operator-arm.yaml
+
+.PHONY: arm-deploy
+arm-deploy: manifests kustomize
+	docker buildx build --platform linux/arm64 --push -t ${ARMIMG} .
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${ARMIMG}
+	$(KUSTOMIZE) build config/default > examples/dist/hyperqueue-operator-arm.yaml
+
 .PHONY: pre-push
-pre-push: generate build-config
+pre-push: generate build-config build-config-arm
 	git status
