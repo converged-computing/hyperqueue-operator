@@ -194,8 +194,6 @@ type ExistingVolume struct {
 	ReadOnly bool `json:"readOnly,omitempty"`
 }
 
-// TODO need to make the function above loop through node, server, worker
-
 // Validate the Hyperqueue
 func (hq *Hyperqueue) Validate() bool {
 

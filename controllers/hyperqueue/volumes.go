@@ -84,7 +84,7 @@ func getVolumes(cluster *api.Hyperqueue) []corev1.Volume {
 	return volumes
 }
 
-// Get Existing volumes for the MiniCluster
+// Get Existing volumes for the cluster
 func getExistingVolumes(existing map[string]api.ExistingVolume) []corev1.Volume {
 	volumes := []corev1.Volume{}
 	for volumeName, volumeMeta := range existing {
