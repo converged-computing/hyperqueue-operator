@@ -1,0 +1,47 @@
+apiVersion: flux-framework.org/v1alpha1
+kind: Hyperqueue
+metadata:
+  labels:
+    app.kubernetes.io/name: hyperqueue
+    app.kubernetes.io/instance: hyperqueue-sample
+    app.kubernetes.io/part-of: hyperqueue-operator
+    app.kubernetes.io/created-by: hyperqueue-operator
+  name: hyperqueue-sample
+  namespace: hyperqueue-operator
+spec:
+
+  # One server, two workers
+  size: 3
+
+  # Interactive mode to keep it running (sleeps after cluster start)
+  interactive: true
+
+  # Run lammps as the original job on 2 nodes
+  job:
+    nodes: 2
+    name: lammps
+    log: log.out
+
+  # If we don't define the worker, won't see the filesystem!
+  worker:
+    image: vanessa/hyperqueue:access-lammps-test
+    workingDir: /opt/lammps/examples/reaxff/HNS    
+    existingVolumes:
+      data:
+        path: /workflow
+        claimName: data 
+
+  server:
+    image: vanessa/hyperqueue:access-lammps-test
+    workingDir: /opt/lammps/examples/reaxff/HNS    
+
+    # Mount Google Filestore to our cluster
+    # see pvc.yaml for creating this first
+    # https://cloud.google.com/filestore/docs/csi-driver#access
+    existingVolumes:
+      data:
+        path: /workflow
+        claimName: data 
+    
+    # Note that number of processes matches nodes 2 above. We could also add --cpus instead of --nodes
+    command: mpirun -np 2 --map-by socket lmp -v x 2 -v y 2 -v z 2 -in in.reaxc.hns -nocite

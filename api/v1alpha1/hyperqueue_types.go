@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -97,6 +98,10 @@ type Node struct {
 	// +optional
 	Image string `json:"image"`
 
+	// Existing Volumes to add to the containers
+	// +optional
+	ExistingVolumes map[string]ExistingVolume `json:"existingVolumes"`
+
 	// Port for Hyperqueue to use.
 	// Since we have a headless service, this
 	// is not represented in the operator, just
@@ -159,6 +164,36 @@ type Resources struct {
 
 type Resource map[string]intstr.IntOrString
 
+// Existing volumes available to mount
+type ExistingVolume struct {
+
+	// Path and claim name are always required if a secret isn't defined
+	// +optional
+	Path string `json:"path,omitempty"`
+
+	// Config map name if the existing volume is a config map
+	// You should also define items if you are using this
+	// +optional
+	ConfigMapName string `json:"configMapName,omitempty"`
+
+	// Items (key and paths) for the config map
+	// +optional
+	Items map[string]string `json:"items"`
+
+	// Claim name if the existing volume is a PVC
+	// +optional
+	ClaimName string `json:"claimName,omitempty"`
+
+	// An existing secret
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
+
+	// +kubebuilder:default=false
+	// +default=false
+	// +optional
+	ReadOnly bool `json:"readOnly,omitempty"`
+}
+
 // Validate the Hyperqueue
 func (hq *Hyperqueue) Validate() bool {
 
@@ -179,7 +214,56 @@ func (hq *Hyperqueue) Validate() bool {
 	if hq.Spec.Job.Name == "" {
 		hq.Spec.Job.Name = "hq-job"
 	}
+
+	// For existing volumes, if it's a claim, a path is required.
+	if !hq.validateExistingVolumes() {
+		fmt.Printf("😥️ Existing container volumes are not valid\n")
+		return false
+	}
 	return true
+}
+
+// Get unique existing volumes across nodes
+func (hq *Hyperqueue) ExistingContainerVolumes() map[string]ExistingVolume {
+	volumes := map[string]ExistingVolume{}
+	for _, volumeSet := range []map[string]ExistingVolume{hq.Spec.Server.ExistingVolumes, hq.Spec.Worker.ExistingVolumes} {
+		for name, volume := range volumeSet {
+			volumes[name] = volume
+		}
+	}
+	return volumes
+}
+
+// validateExistingVolumes ensures secret names vs. volume paths are valid
+func (hq *Hyperqueue) validateExistingVolumes() bool {
+
+	valid := true
+	for _, volumeSet := range []map[string]ExistingVolume{hq.Spec.Server.ExistingVolumes, hq.Spec.Worker.ExistingVolumes} {
+		for key, volume := range volumeSet {
+
+			// Case 1: it's a secret and we only need that
+			if volume.SecretName != "" {
+				continue
+			}
+
+			// Case 2: it's a config map (and will have items too, but we don't hard require them)
+			if volume.ConfigMapName != "" {
+				continue
+			}
+
+			// Case 3: claim desired without path
+			if volume.ClaimName == "" && volume.Path != "" {
+				fmt.Printf("😥️ Found existing volume %s with path %s that is missing a claim name\n", key, volume.Path)
+				valid = false
+			}
+			// Case 4: reverse of the above
+			if volume.ClaimName != "" && volume.Path == "" {
+				fmt.Printf("😥️ Found existing volume %s with claimName %s that is missing a path\n", key, volume.ClaimName)
+				valid = false
+			}
+		}
+	}
+	return valid
 }
 
 // WorkerNodes returns the number of worker nodes

@@ -31,6 +31,16 @@ func (r *HyperqueueReconciler) getContainers(
 		pullPolicy = corev1.PullAlways
 	}
 
+	// Add on existing volumes/claims
+	for volumeName, volume := range node.ExistingVolumes {
+		mount := corev1.VolumeMount{
+			Name:      volumeName,
+			MountPath: volume.Path,
+			ReadOnly:  volume.ReadOnly,
+		}
+		mounts = append(mounts, mount)
+	}
+
 	// If it's the worker vs. main server determines the entrypoint script
 	// The main server takes a custom command to run
 	script := "/hyperqueue_operator/start-server.sh"
